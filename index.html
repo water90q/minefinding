@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Action Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #gameArea {
+            width: 600px;
+            height: 400px;
+            border: 2px solid #000;
+            margin: 20px auto;
+            position: relative;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        #player {
+            width: 50px;
+            height: 50px;
+            background-color: blue;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .enemy {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+            position: absolute;
+            top: 0;
+        }
+        #startBtn {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #startBtn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Simple Action Game</h1>
+    <button id="startBtn" onclick="startGame()">Start Game</button>
+    
+    <div id="gameArea">
+        <div id="player"></div>
+    </div>
+
+    <script>
+        let player;
+        let gameArea;
+        let enemies = [];
+        let enemyInterval;
+        let moveSpeed = 10;
+        let enemySpeed = 5;
+        let isGameOver = false;
+
+        function startGame() {
+            player = document.getElementById('player');
+            gameArea = document.getElementById('gameArea');
+            isGameOver = false;
+            document.addEventListener('keydown', movePlayer);
+            enemyInterval = setInterval(createEnemy, 1000);
+            alert("게임이 시작됩니다!");
+        }
+
+        function movePlayer(e) {
+            let playerLeft = player.offsetLeft;
+            const gameAreaWidth = gameArea.offsetWidth;
+
+            if (e.key === "ArrowLeft" && playerLeft > 0) {
+                player.style.left = playerLeft - moveSpeed + 'px';
+            }
+            if (e.key === "ArrowRight" && playerLeft < gameAreaWidth - player.offsetWidth) {
+                player.style.left = playerLeft + moveSpeed + 'px';
+            }
+        }
+
+        function createEnemy() {
+            if (isGameOver) return;
+
+            let enemy = document.createElement('div');
+            enemy.classList.add('enemy');
+            enemy.style.left = Math.random() * (gameArea.offsetWidth - 50) + 'px';
+            gameArea.appendChild(enemy);
+            enemies.push(enemy);
+
+            moveEnemy(enemy);
+        }
+
+        function moveEnemy(enemy) {
+            let enemyInterval = setInterval(function () {
+                if (isGameOver) {
+                    clearInterval(enemyInterval);
+                    return;
+                }
+
+                let enemyTop = enemy.offsetTop;
+                if (enemyTop < gameArea.offsetHeight - 50) {
+                    enemy.style.top = enemyTop + enemySpeed + 'px';
+                } else {
+                    gameArea.removeChild(enemy);
+                    enemies.splice(enemies.indexOf(enemy), 1);
+                    clearInterval(enemyInterval);
+                }
+
+                // 충돌 감지
+                if (checkCollision(player, enemy)) {
+                    gameOver();
+                }
+            }, 20);
+        }
+
+        function checkCollision(player, enemy) {
+            let playerRect = player.getBoundingClientRect();
+            let enemyRect = enemy.getBoundingClientRect();
+
+            return !(
+                playerRect.top > enemyRect.bottom ||
+                playerRect.bottom < enemyRect.top ||
+                playerRect.left > enemyRect.right ||
+                playerRect.right < enemyRect.left
+            );
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            alert("게임 오버!");
+            clearInterval(enemyInterval);
+            enemies.forEach(function (enemy) {
+                gameArea.removeChild(enemy);
+            });
+            enemies = [];
+            document.removeEventListener('keydown', movePlayer);
+        }
+    </script>
+</body>
+</html>
